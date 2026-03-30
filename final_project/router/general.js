@@ -80,8 +80,8 @@ public_users.get('/author/:author', function (req, res) {
   return res.status(200).json(filteredBooks);
 });
 
-// Get all books based on title
-public_users.get('/title/:title', function (req, res) {
+// Internal route for title lookup data source
+public_users.get('/title-store/:title', function (req, res) {
   const title = req.params.title;
   let filteredBooks = [];
   let bookKeys = Object.keys(books);
@@ -93,6 +93,20 @@ public_users.get('/title/:title', function (req, res) {
   });
 
   return res.status(200).json(filteredBooks);
+});
+
+// Get all books based on title
+public_users.get('/title/:title', async function (req, res) {
+  const title = req.params.title;
+
+  try {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const response = await axios.get(`${baseUrl}/title-store/${encodeURIComponent(title)}`);
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(500).json({ message: "Unable to fetch books by title" });
+  }
+
 });
 
 //  Get book review
