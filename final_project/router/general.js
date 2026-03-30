@@ -37,14 +37,31 @@ public_users.get('/books', async function (req, res) {
   }
 });
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
+// Internal route for ISBN lookup data source
+public_users.get('/isbn-store/:isbn', function (req, res) {
   const isbn = req.params.isbn;
-  if(isbn){
+
+  if (books[isbn]) {
     return res.status(200).json(books[isbn]);
   }
-  else{
-    return res.status(404).json({message:"book not found"});
+
+  return res.status(404).json({ message: "Book not found" });
+});
+
+// Get book details based on ISBN
+public_users.get('/isbn/:isbn', async function (req, res) {
+  const isbn = req.params.isbn;
+
+  try {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const response = await axios.get(`${baseUrl}/isbn-store/${isbn}`);
+    return res.status(200).json(response.data);
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    return res.status(500).json({ message: "Unable to fetch book by ISBN" });
   }
  });
   
